@@ -1,0 +1,27 @@
+local function get_last_modified()
+	return love.filesystem.getInfo("main.lua").modtime
+end
+
+local last_modified = get_last_modified() 
+
+
+local function check()
+	if last_modified == get_last_modified() then return end
+	print("modified!", last_modified, get_last_modified())
+	event.RemoveListener({event_type = "update", id = "hot-reload"})
+	os.execute("nattlua run &")
+	os.exit()
+	-- in case something goes wrong
+end
+
+local last_check = love.timer.getTime()
+
+event.AddListener({
+	event_type = "update",
+	id = "hot-reload",
+	callback = function(dt) 
+		if last_check > love.timer.getTime() then return end
+		last_check = love.timer.getTime() + 0.1
+		check() 
+	end,
+})

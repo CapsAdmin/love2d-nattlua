@@ -1,0 +1,12 @@
+-- declare love as global so it will be available for all the other imports
+type love = import("./love_api.nlua")
+
+_G.event = import("./event.nlua")
+import("hot_reload.nlua")
+import("./preinit.nlua")
+
+function love.load()
+	import("./game/init.nlua")
+end
+
+print("LOADED")

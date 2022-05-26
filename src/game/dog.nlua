@@ -1,0 +1,39 @@
+local type {Body, Shape, Fixture} = love.types
+
+local Dog = {}
+Dog.__index = Dog
+
+type Dog.@Name = "Dog"
+
+type Dog.@Self = {
+	body = Body,
+	shape = Shape,
+	fixture = Fixture,
+}
+
+local type Dog = Dog.@Self
+
+function Dog:Update(dt)
+
+end
+
+function Dog:Draw()
+	love.graphics.setColor(0.76, 1, 0.05)
+	love.graphics.circle("fill", self.body:getX(), self.body:getY(), self.shape:getRadius())
+end
+
+function Dog.New()
+	local body = love.physics.newBody(_G.physics_world, 650/2, 650/2, "dynamic")
+	local shape = love.physics.newCircleShape( 20)
+	local fixture = love.physics.newFixture(body, shape, 1)
+	fixture:setRestitution(0.9)
+
+	return setmetatable({
+		body = body,
+		shape = shape,
+		fixture = fixture,
+	}, Dog)
+end
+
+return Dog
+

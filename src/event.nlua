@@ -1,0 +1,180 @@
+
+
+local love_events = {
+	"displayrotated",
+	"draw",
+	"errorhandler",
+	"load",
+	"lowmemory",
+	"quit",
+	--"run",
+	"threaderror",
+	"update",
+	"directorydropped",
+	"filedropped",
+	"focus",
+	"mousefocus",
+	"resize",
+	"visible",
+	"keypressed",
+	"keyreleased",
+	"textedited",
+	"textinput",
+	"mousemoved",
+	"mousepressed",
+	"mousereleased",
+	"wheelmoved",
+	"gamepadaxis",
+	"gamepadpressed",
+	"gamepadreleased",
+	"joystickadded",
+	"joystickaxis",
+	"joystickhat",
+	"joystickpressed",
+	"joystickreleased",
+	"joystickremoved",
+	"touchmoved",
+	"touchpressed",
+	"touchreleased",
+}
+
+local type Event = {
+	event_type = string,
+	callback = Function,
+	id = any,
+	priority = number | nil,
+	remove_after_one_call = boolean | nil,
+	on_error = Function | nil
+}
+
+local event = {}
+
+local function llog(str: string, ...: ...string)
+	print("[event]", str:format(...))
+end
+
+local type known_events = {}
+
+function event.Declare<|event_type: string, callback: Function|>
+	known_events[event_type] = callback
+end
+
+for _, event_type in ipairs(love_events) do
+	event.Declare<|event_type, love[event_type]|>
+end
+
+event.active = {} as Map<|string, List<|Event|>|>
+event.destroy_tag = {}
+event.fix_indices = {} as Map<|string, true | nil|>
+
+local function sort_events()
+	for key, tbl in pairs(event.active) do
+		local new = {}
+		for _, v in pairs(tbl) do table.insert(new, v) end
+		table.sort(new, function(a, b) return a.priority > b.priority end)
+		event.active[key] = new
+	end
+end
+
+local analyzer function change_callback(callback: Function, signature: Function)
+	callback:SetInputSignature(signature:GetInputSignature():Copy())
+	callback:SetOutputSignature(signature:GetOutputSignature():Copy())
+	callback:SetCalled(false)
+end
+
+function event.AddListener(config: ref Event)
+	change_callback<|config.callback, known_events[config.event_type]|>
+
+	config.priority = config.priority or 0
+
+	-- useful for initialize events
+	if config.id == nil then
+		config.id = {}
+		config.remove_after_one_call = true
+	end
+
+	event.RemoveListener(config)
+
+	event.active[config.event_type] = event.active[config.event_type] or {}
+
+	table.insert(event.active[config.event_type], config)
+
+	sort_events()
+end
+
+
+function event.RemoveListener(config: ref Event)
+	if not event.active[config.event_type] then return end
+	for index, val in pairs(event.active[config.event_type]) do
+		if config.id == val.id then
+			event.active[config.event_type][index] = nil
+
+			event.fix_indices[config.event_type] = true
+
+			break
+		end
+	end
+end
+
+
+local function fixindices(tbl: mutable List<|any|>)
+	local temp = {}
+
+	for k, v in pairs(tbl) do
+		table.insert(temp, {v = v, k = tonumber(k) or 0})
+		tbl[k] = nil
+	end
+
+	table.sort(temp, function(a, b) return a.k < b.k end)
+
+	for k, v in ipairs(temp) do
+		tbl[k] = v.v
+	end
+
+	return temp
+end
+
+function event.Call(event_type, a_, b_, c_, d_, e_)
+	local status: boolean
+	local a,b,c,d,e
+	local events = event.active[event_type]
+	if events then
+		for index = 1, #events do
+			local data = events[index]
+			if not data then break end
+
+			status, a,b,c,d,e = xpcall(data.callback, data.on_error or print, a_, b_, c_, d_, e_)
+
+			if a == event.destroy_tag or data.remove_after_one_call then
+				event.RemoveListener(data)
+			else
+				if status == false then
+					if type(data.on_error) == "function" then
+						data.on_error(a, data)
+					else
+						event.RemoveListener(data)
+						llog("[%q][%q] removed", data.event_type, data.id)
+					end
+				end
+
+				if a ~= nil then
+					return a,b,c,d,e
+				end
+			end
+		end
+
+		if event.fix_indices[event_type] then
+			fixindices(events)
+			event.fix_indices[event_type] =  nil
+			sort_events()
+		end
+	end
+
+end
+
+for _, event_type in ipairs(love_events) do
+	love[event_type] = function(...) return event.Call(event_type, ...) end
+end
+
+
+return event

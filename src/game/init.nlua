@@ -1,0 +1,26 @@
+_G.physics_world = import("./world.nlua")
+
+local Dog = import("./dog.nlua")
+
+local dog = Dog.New()
+
+love.graphics.setBackgroundColor(1, 1, 1)
+
+event.AddListener({
+    event_type = "draw",
+    id = "draw",
+    callback = function() 
+        dog:Draw()
+    end,
+})
+
+event.AddListener({
+    event_type = "update",
+    id = "update",
+    callback = function(dt) 
+        _G.physics_world:update(dt)
+        dog:Update(dt)
+    end,
+})
+
+_G.refs = {dog}

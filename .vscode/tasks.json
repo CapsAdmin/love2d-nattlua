@@ -1,0 +1,19 @@
+// -jp=Fpa -
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "onsave",
+            "type": "shell",
+            "command": "cd ${workspaceFolder} && nattlua build",
+            "presentation": {
+                "echo": true,
+                "reveal": "never",
+                "focus": false,
+                "panel": "shared",
+                "showReuseMessage": true,
+                "clear": true
+            }
+        }
+    ]
+}

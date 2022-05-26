@@ -1,0 +1,12 @@
+{
+  "triggerTaskOnSave.tasks": {
+    "onsave": [
+      "**/*.nlua",
+    ]
+  },
+  "files.associations": {
+    "*.nlua": "lua",
+    "*.lua.coverage": "lua",
+  },
+  "editor.formatOnSave": false,
+}
