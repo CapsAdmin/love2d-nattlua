@@ -1,8 +1,19 @@
 _G.physics_world = import("./world.nlua")
-
+_G.objects = {}
 local Dog = import("./dog.nlua")
+local Trash = import("./trash.nlua")
+local Vec2 = import("./vec2.nlua")
 
-local dog = Dog.New()
+table.insert(objects, Dog.New())
+
+for i = 1, 10 do
+    table.insert(objects, Trash.New(
+        Vec2(
+            math.random(1, love.graphics.getWidth()), 
+            math.random(1, love.graphics.getHeight())
+        )
+    ))
+end
 
 love.graphics.setBackgroundColor(1, 1, 1)
 
@@ -10,7 +21,9 @@ event.AddListener({
     event_type = "draw",
     id = "draw",
     callback = function() 
-        dog:Draw()
+        for i,v in ipairs(_G.objects) do
+            v:Draw()
+        end
     end,
 })
 
@@ -19,8 +32,9 @@ event.AddListener({
     id = "update",
     callback = function(dt) 
         _G.physics_world:update(dt)
-        dog:Update(dt)
+        for i,v in ipairs(_G.objects) do
+            v:Update(dt)
+        end
     end,
 })
 
-_G.refs = {dog}
