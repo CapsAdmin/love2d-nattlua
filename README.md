@@ -3,7 +3,8 @@ This a löve example written in Nattlua (lua with a typesystem and some other th
 First clone [nattlua](https://github.com/CapsAdmin/NattLua) somewhere and run
 ```
 luajit build.lua
-sudo cp build_output.lua /usr/local/bin/nattlua
+luajit install.lua
+luajit build.lua vscode # optional if you want the language extension
 ```
 
 Then you can run the following commands:

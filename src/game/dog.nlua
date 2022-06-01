@@ -1,11 +1,10 @@
-local type {Body, Shape, Fixture, Drawable} = love.types
+local type { Body, Shape, Fixture, Drawable } = love.types
+
 local Vec2 = import("./vec2.nlua")
 local Poop = import("./poop.nlua")
 local Dog = {}
 Dog.__index = Dog
-
 type Dog.@Name = "Dog"
-
 type Dog.@Self = {
 	body = Body,
 	shape = Shape,
@@ -13,33 +12,33 @@ type Dog.@Self = {
 	frame = number,
 	pooped = boolean,
 }
-
 local type Dog = Dog.@Self
 
 function Dog:IsPooping()
-	return love.timer.getTime()%7 < 2
+	return love.timer.getTime() % 7 < 2
 end
 
 function Dog:Update(dt)
-
 	if self:IsPooping() then
 		if not self.pooped then
 			table.insert(_G.objects, Poop.New(Vec2(self.body:getX(), self.body:getY())))
 			self.pooped = true
 		end
-	return end
+
+		return
+	end
 
 	self.pooped = false
-
 	local x, y = love.mouse.getPosition()
+
 	if x == 0 or y == 0 then return end -- wtf
-	local mpos = Vec2(x,y)
+	local mpos = Vec2(x, y)
 	local pos = Vec2(self.body:getPosition())
 	local dir = mpos - pos
 	local velocity = dir:GetNormalized() * 500
-	if dir:GetLength() > 50 then
-		self.body:applyForce(velocity:Unpack())
-	end
+
+	if dir:GetLength() > 50 then self.body:applyForce(velocity:Unpack()) end
+
 	self.frame = self.frame + Vec2(self.body:getLinearVelocity()):GetLength() / 1300
 end
 
@@ -47,51 +46,53 @@ local settings = {
 	mipmaps = false,
 	linear = false,
 }
-
 local walk1 = love.graphics.newImage("assets/dog/walk1.png", settings)
 local walk2 = love.graphics.newImage("assets/dog/walk2.png", settings)
 local poop = love.graphics.newImage("assets/dog/poop.png", settings)
 
 function Dog:GetWalkImage()
 	local frame = math.ceil(self.frame)
-	return frame%2 == 0 and walk1 or walk2
+	return frame % 2 == 0 and walk1 or walk2
 end
 
-
 function Dog:Draw()
-	love.graphics.setColor(1,1,1)
-
+	love.graphics.setColor(1, 1, 1)
 	local dir = Vec2(self.body:getLinearVelocity())
 	local img = self:GetWalkImage()
 
-	if self:IsPooping() then
-		img = poop
-	end
+	if self:IsPooping() then img = poop end
 
 	local w, h = img:getDimensions()
-
 	local scalew = (1 / w) * 100
 	local scaleh = (1 / h) * 100
-
-	love.graphics.draw(img as any, self.body:getX(), self.body:getY(), 0, dir.x > 0 and scalew or -scalew, scaleh, w/2, h/2)
+	love.graphics.draw(
+		img  as any,
+		self.body:getX(),
+		self.body:getY(),
+		0,
+		dir.x > 0 and scalew or -scalew,
+		scaleh,
+		w / 2,
+		h / 2
+	)
 end
 
 function Dog.New()
-	local body = love.physics.newBody(_G.physics_world, 650/2, 650/2, "dynamic")
-	local shape = love.physics.newCircleShape( 20)
+	local body = love.physics.newBody(_G.physics_world, 650 / 2, 650 / 2, "dynamic")
+	local shape = love.physics.newCircleShape(20)
 	local fixture = love.physics.newFixture(body, shape, 1)
-
 	body:setLinearDamping(5)
 	fixture:setRestitution(0.9)
-
-	return setmetatable({
-		body = body,
-		shape = shape,
-		fixture = fixture,
-		frame = 0,
-		pooped = false,
-	}, Dog)
+	return setmetatable(
+		{
+			body = body,
+			shape = shape,
+			fixture = fixture,
+			frame = 0,
+			pooped = false,
+		},
+		Dog
+	)
 end
 
 return Dog
-

@@ -8,5 +8,6 @@
     "*.nlua": "lua",
     "*.lua.coverage": "lua",
   },
-  "editor.formatOnSave": false,
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "unpublished.nattlua"
 }
